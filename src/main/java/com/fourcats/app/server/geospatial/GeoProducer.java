@@ -21,7 +21,7 @@ public class GeoProducer extends Thread {
             {
                 properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
                         KafkaProperties.KAFKA_SERVER_URL + ":" + KafkaProperties.KAFKA_SERVER_PORT);
-                properties.put(ProducerConfig.CLIENT_ID_CONFIG, KafkaProperties.CLIENT_ID);
+                properties.put(ProducerConfig.CLIENT_ID_CONFIG, KafkaProperties.PRODUCER_CLIENT_ID);
                 properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, DoubleSerializer.class.getName());
                 properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, DoubleSerializer.class.getName());
             }
@@ -46,6 +46,7 @@ public class GeoProducer extends Thread {
                         System.out.println("send returned non null: [" + metadata.toString() + "]");
                     }
                 }
+                //Thread.sleep(2000);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -69,9 +70,9 @@ class GeoProducerCallBack implements Callback {
     public void onCompletion(RecordMetadata recordMetadata, Exception e) {
         long curr = System.currentTimeMillis();
         long elapsed = curr - startTime_;
-        if (recordMetadata != null && e != null) {
+        if (recordMetadata != null && e == null) {
             StringBuilder sb = new StringBuilder();
-            sb.append("Key: [");
+            sb.append(">> SENT: Key: [");
             sb.append(key_);
             sb.append("], value=[");
             sb.append(value_);
@@ -84,6 +85,12 @@ class GeoProducerCallBack implements Callback {
 
 
             System.out.println(sb.toString());
+        }
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException ei) {
+            ei.printStackTrace();
         }
     }
 }
