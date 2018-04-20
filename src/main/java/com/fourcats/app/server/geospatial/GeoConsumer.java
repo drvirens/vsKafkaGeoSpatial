@@ -34,7 +34,7 @@ public class GeoConsumer extends Thread {
         while (true) {
             ConsumerRecords<Double, Double> records = consumer_.poll(1000);
             if (records.count() == 0) {
-                System.out.println("Consumer Poll - no entries ");
+                //System.out.println("Consumer Poll - no entries ");
                 continue;
             }
             for (ConsumerRecord<Double, Double> record : records) {

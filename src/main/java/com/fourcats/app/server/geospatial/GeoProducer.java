@@ -43,10 +43,9 @@ public class GeoProducer extends Thread {
                 if (ret != null) {
                     RecordMetadata metadata = ret.get();
                     if (metadata != null) {
-                        System.out.println("send returned non null: [" + metadata.toString() + "]");
+                        //System.out.println("send returned non null: [" + metadata.toString() + "]");
                     }
                 }
-                //Thread.sleep(2000);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -79,8 +78,7 @@ class GeoProducerCallBack implements Callback {
             sb.append("], partition=[");
             sb.append(recordMetadata.partition());
             sb.append("] ,elapsed=[");
-            Date d = new Date(elapsed);
-            sb.append(d.toString());
+            sb.append(elapsed);
             sb.append("ms]");
 
 
