@@ -1,6 +1,14 @@
 package com.fourcats.app.server.geospatial;
 
 
+/**
+ * How to run?
+ *
+ * --> 1. Start zookeeper
+ * --> 2. Start kafka
+ * --> 3. Start redis
+ */
+
 public class Demo {
     private final GeoProducer producer_;
     private final GeoConsumer consumer_;

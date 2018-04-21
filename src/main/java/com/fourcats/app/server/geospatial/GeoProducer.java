@@ -1,5 +1,7 @@
 package com.fourcats.app.server.geospatial;
 
+import com.fourcats.app.server.geospatial.test.BOLatLong;
+import com.fourcats.app.server.geospatial.test.GeoDataGeneratedListener;
 import org.apache.kafka.clients.producer.*;
 import org.apache.kafka.common.serialization.DoubleSerializer;
 
@@ -7,10 +9,12 @@ import java.util.Date;
 import java.util.Properties;
 import java.util.concurrent.Future;
 
-public class GeoProducer extends Thread {
+public class GeoProducer extends Thread implements GeoDataGeneratedListener {
     private final KafkaProducer<Double, Double> producer_;
     private final String topic_;
     private final boolean isAsync_;
+    private SampleGeoLocationGenerator sampleGeoLocationGenerator_;
+    private boolean shouldContinueLoop_;
 
 
     public GeoProducer(String topic, boolean isAsync) {
@@ -27,30 +31,70 @@ public class GeoProducer extends Thread {
             }
 
         producer_ = new KafkaProducer<>(properties);
+        shouldContinueLoop_ = true;
+        sampleGeoLocationGenerator_ = new SampleGeoLocationGenerator(this);
     }
 
     public void run() {
-        int messageNo = 1;
-        while (true) {
-            Double key = Double.valueOf(messageNo);
-            Double value = 1.0;
-            ProducerRecord<Double, Double> record = new ProducerRecord<>(topic_, key, value);
+        int numberOfItemsToPut = 2;
+        sampleGeoLocationGenerator_.readNext(numberOfItemsToPut);
 
-            GeoProducerCallBack callBack = new GeoProducerCallBack(key, value);
 
-            try {
-                Future<RecordMetadata> ret = producer_.send(record, callBack);
-                if (ret != null) {
-                    RecordMetadata metadata = ret.get();
-                    if (metadata != null) {
-                        //System.out.println("send returned non null: [" + metadata.toString() + "]");
-                    }
+
+
+
+
+//        int messageNo = 1;
+//        while (true) {
+//            Double key = Double.valueOf(messageNo);
+//            Double value = 1.0;
+//            ProducerRecord<Double, Double> record = new ProducerRecord<>(topic_, key, value);
+//
+//            GeoProducerCallBack callBack = new GeoProducerCallBack(key, value);
+//
+//            try {
+//                Future<RecordMetadata> ret = producer_.send(record, callBack);
+//                if (ret != null) {
+//                    RecordMetadata metadata = ret.get();
+//                    if (metadata != null) {
+//                        //System.out.println("send returned non null: [" + metadata.toString() + "]");
+//                    }
+//                }
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//            ++messageNo;
+//        }
+    }
+
+    private void fireProduceEvent(BOLatLong eventData) {
+        Double key = eventData.longitude; //Double.valueOf(eventData.longitude);
+        Double value = eventData.latitude; //1.0;
+        ProducerRecord<Double, Double> record = new ProducerRecord<>(topic_, key, value);
+
+        GeoProducerCallBack callBack = new GeoProducerCallBack(key, value);
+
+        try {
+            Future<RecordMetadata> ret = producer_.send(record, callBack);
+            if (ret != null) {
+                RecordMetadata metadata = ret.get();
+                if (metadata != null) {
+                    //System.out.println("send returned non null: [" + metadata.toString() + "]");
+                    shouldContinueLoop_ = true;
+                    return;
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
-            ++messageNo;
+        } catch (Exception e) {
+            e.printStackTrace();
+            shouldContinueLoop_ = false;
         }
+        shouldContinueLoop_ = false;
+    }
+
+    @Override
+    public void didReadOneGeoEntryRecord(BOLatLong record) {
+        System.out.println("read one record");
+        fireProduceEvent(record);
     }
 }
 
@@ -85,10 +129,10 @@ class GeoProducerCallBack implements Callback {
             System.out.println(sb.toString());
         }
 
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException ei) {
-            ei.printStackTrace();
-        }
+//        try {
+//            Thread.sleep(500);
+//        } catch (InterruptedException ei) {
+//            ei.printStackTrace();
+//        }
     }
 }
